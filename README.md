@@ -1,6 +1,7 @@
 ## TODO
 
 - validate using arrow's Validated type
+- split gradle modules
 - ArchUnit
 - more infra: database, ktor server, messaging, ...
 
