@@ -1,14 +1,12 @@
-# The birthday greetings kata
+## TODO
 
-A refactoring exercise to learn about dependency inversion and hexagonal architecture. Inspired by a [blog post][kata-blog] from [Matteo Vaccari][mateo-vaccari]. You can find the original [repo here][kata-repo].
+- validate using arrow's Validated type
+- ArchUnit
+- more infra: database, ktor server, messaging, ...
 
-## Solution
+Hexagonal architecture with functional programming style using Kotlin and [Arrow][arrow-kt]
 
-I decided to solve the problem in a functional programming style using the Kotlin programming language and [Arrow][arrow-kt], a functional companion to the Kotlin standard library.
-
-## Resource
-
-The following resources helped me in designing this solution:
+## Resources
 
 - [Functional and Reactive Domain Modeling][frdomain]
 - [Domain Modeling made functional][dmfunc]

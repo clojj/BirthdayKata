@@ -1,5 +1,15 @@
-package com.sanastasov.birthdaykata
+package com.clojj.birthdaykata
 
+import com.clojj.birthdaykata.application.Env
+import com.clojj.birthdaykata.application.sendGreetingsUseCase
+import com.clojj.birthdaykata.domain.BirthdayService
+import com.clojj.birthdaykata.domain.BirthdayServiceInterpreter
+import com.clojj.birthdaykata.domain.ports.EmailService
+import com.clojj.birthdaykata.domain.ports.EmployeeRepository
+import com.clojj.birthdaykata.domain.ports.WisdomProvider
+import com.clojj.birthdaykata.infra.SmtpEmailService
+import com.clojj.birthdaykata.infra.adapter.http.HttpWisdomProvider
+import com.clojj.birthdaykata.infra.adapter.repository.plain.FileEmployeeRepository
 import com.dumbster.smtp.SimpleSmtpServer
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.core.test.TestCase
@@ -16,6 +26,13 @@ class AcceptanceTest : StringSpec() {
 
     fun testEnv(port: Int): Env = object : Env,
         EmployeeRepository by FileEmployeeRepository("input.txt"),
+        WisdomProvider by HttpWisdomProvider(),
+        BirthdayService by BirthdayServiceInterpreter(),
+        EmailService by SmtpEmailService("localhost", port) {}
+
+    fun testEnvFailingRepository(port: Int): Env = object : Env,
+        EmployeeRepository by FailingFileEmployeeRepository(),
+        WisdomProvider by HttpWisdomProvider(),
         BirthdayService by BirthdayServiceInterpreter(),
         EmailService by SmtpEmailService("localhost", port) {}
 
@@ -31,8 +48,7 @@ class AcceptanceTest : StringSpec() {
 
     init {
         "will send greeting when it is somebody birthday" {
-            testEnv(server.port)
-                .sendGreetingsUseCase(LocalDate.of(2019, 10, 8))
+            testEnv(server.port).sendGreetingsUseCase(LocalDate.of(2019, 10, 8))
 
             val sent = server.receivedEmails.toList()
 
@@ -49,6 +65,16 @@ class AcceptanceTest : StringSpec() {
                 .sendGreetingsUseCase(LocalDate.of(2019, 12, 1))
 
             server.receivedEmails.toList().size shouldBe 0
+        }
+
+        "either computation - will NOT send any greeting when repository fails" {
+            testEnvFailingRepository(server.port)
+                .sendGreetingsUseCase(LocalDate.of(2019, 10, 8))
+
+            val sent = server.receivedEmails.toList()
+
+            sent.size shouldBe 0
+            // TODO return Either from UseCase and assert here
         }
     }
 }

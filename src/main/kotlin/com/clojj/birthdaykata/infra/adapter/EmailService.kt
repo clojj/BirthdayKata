@@ -1,5 +1,10 @@
-package com.sanastasov.birthdaykata
+package com.clojj.birthdaykata.infra
 
+import arrow.core.Either
+import arrow.core.right
+import com.clojj.birthdaykata.domain.EmailAddress
+import com.clojj.birthdaykata.domain.EmailMessage
+import com.clojj.birthdaykata.domain.ports.EmailService
 import java.util.*
 import javax.mail.Message
 import javax.mail.Session
@@ -8,23 +13,20 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 
-interface EmailService {
-
-    suspend fun sendGreeting(emailMessage: EmailMessage): Unit
-
-    suspend fun sendGreetings(greetings: List<EmailMessage>): List<Unit> =
-        greetings.map { sendGreeting(it) }
-}
-
 class SmtpEmailService(private val host: String, private val port: Int) : EmailService {
 
-    override suspend fun sendGreeting(emailMessage: EmailMessage): Unit {
+    override suspend fun sendGreeting(emailMessage: EmailMessage): Either<Throwable, String> {
         val session =  buildSession()
         val message = createMessage(session, emailMessage)
-        Transport.send(message)
+        return Either.catch {
+            Transport.send(message)
+            println("sent")
+            message.subject
+        }
+        return emailMessage.to.toString().right()
     }
 
-    private suspend fun buildSession(): Session {
+    private fun buildSession(): Session {
         val props = Properties().apply {
             put("mail.smtp.host", host)
             put("mail.smtp.port", port.toString())
@@ -33,7 +35,7 @@ class SmtpEmailService(private val host: String, private val port: Int) : EmailS
         return Session.getInstance(props, null)
     }
 
-    private suspend fun createMessage(session: Session, emailMessage: EmailMessage): Message =
+    private fun createMessage(session: Session, emailMessage: EmailMessage): Message =
         MimeMessage(session).apply {
             setFrom(emailMessage.from.toInternetAddress())
             setRecipient(Message.RecipientType.TO, emailMessage.to.toInternetAddress())

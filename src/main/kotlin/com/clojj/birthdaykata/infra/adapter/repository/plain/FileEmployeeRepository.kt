@@ -1,36 +1,32 @@
-package com.sanastasov.birthdaykata
+package com.clojj.birthdaykata.infra.adapter.repository.plain
 
-import arrow.core.Nel
+import arrow.core.*
 import arrow.core.extensions.list.traverse.sequence
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
 import arrow.core.extensions.validated.applicative.applicative
-import arrow.core.fix
-import arrow.core.identity
 import arrow.fx.coroutines.bracket
+import com.clojj.birthdaykata.domain.Employee
+import com.clojj.birthdaykata.domain.ValidationResult
+import com.clojj.birthdaykata.domain.ports.EmployeeRepository
 import java.io.BufferedReader
 import java.io.File
-
-interface EmployeeRepository {
-
-    suspend fun allEmployees(): List<Employee>
-}
 
 class FileEmployeeRepository(fileName: String) : EmployeeRepository {
 
     private val file = File(fileName)
 
-    override suspend fun allEmployees(): List<Employee> =
+    override suspend fun allEmployees(): Either<Throwable, List<Employee>> =
         bracket({ file.bufferedReader() }, readFile(), { it.close() })
 
-    private fun readFile(): suspend (BufferedReader) -> List<Employee> = { br: BufferedReader ->
+    private fun readFile(): suspend (BufferedReader) -> Either<Throwable, List<Employee>> = { br: BufferedReader ->
         val employees =
             br.readLines()
                 .drop(1)
                 .map(employeeParser)
 
-        val validatedEmployees = sequence(employees)
+        val validatedEmployees: Validated<NonEmptyList<String>, List<Employee>> = sequence(employees)
 
-        validatedEmployees.fold({ throw EmployeeRepositoryException(it) }, ::identity)
+        validatedEmployees.fold({ Either.left(EmployeeRepositoryException(it)) }, { Either.right(it) })
     }
 
     private fun sequence(input: List<ValidationResult<Employee>>): ValidationResult<List<Employee>> =

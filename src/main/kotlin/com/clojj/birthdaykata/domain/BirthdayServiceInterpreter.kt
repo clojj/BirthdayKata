@@ -1,17 +1,14 @@
-package com.sanastasov.birthdaykata
+package com.clojj.birthdaykata.domain
 
+import arrow.core.Either
+import arrow.core.right
 import java.time.LocalDate
 import java.time.Month
 
-interface BirthdayService {
-
-    fun birthdayMessages(employees: List<Employee>, date: LocalDate): List<EmailMessage>
-}
-
 class BirthdayServiceInterpreter : BirthdayService {
 
-    override fun birthdayMessages(employees: List<Employee>, date: LocalDate): List<EmailMessage> =
-        employees.filter { employeeFilter(date, it.dateOfBirth) }
+    override fun birthdayMessages(employees: List<Employee>, date: LocalDate): Either<Throwable, List<EmailMessage>> {
+        return employees.filter { employeeFilter(date, it.dateOfBirth) }
             .map {
                 EmailMessage(
                     SENDER_EMAIL,
@@ -19,7 +16,8 @@ class BirthdayServiceInterpreter : BirthdayService {
                     "Happy Birthday!",
                     "Happy birthday, dear ${it.firstName}!"
                 )
-            }
+            }.right()
+    }
 
     private fun employeeFilter(date: LocalDate, birthday: LocalDate): Boolean =
         if (!date.isLeapYear && date.isFeb28th) birthday.isSameDay(date) || birthday.isFeb29th
