@@ -26,6 +26,7 @@ class FileEmployeeRepository(fileName: String) : EmployeeRepository {
 
         val validatedEmployees: Validated<NonEmptyList<String>, List<Employee>> = sequence(employees)
 
+        // TODO replace exception here ?
         validatedEmployees.fold({ Either.left(EmployeeRepositoryException(it)) }, { Either.right(it) })
     }
 

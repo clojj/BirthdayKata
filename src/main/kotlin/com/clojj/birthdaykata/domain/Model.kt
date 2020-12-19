@@ -1,8 +1,10 @@
 package com.clojj.birthdaykata.domain
 
-import arrow.core.*
+import arrow.core.NonEmptyList
+import arrow.core.ValidatedNel
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
-import arrow.core.extensions.validated.applicative.applicative
+import arrow.core.invalidNel
+import arrow.core.valid
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -48,14 +50,14 @@ data class Employee(
             dateOfBirth: String?,
             email: String?
         ): ValidationResult<Employee> =
-            ValidationResult.applicative(Nel.semigroup<String>())
+            ValidationResult
                 .tupledN(
+                    NonEmptyList.semigroup(),
                     validateName(firstName),
                     validateName(lastName),
                     validateDateOfBirth(dateOfBirth),
                     EmailAddress(email)
-                ).fix()
-                .map { (fn, ln, dob, e) -> Employee(fn, ln, dob, e) }
+                ).map { (fn, ln, dob, e) -> Employee(fn, ln, dob, e) }
     }
 }
 

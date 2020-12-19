@@ -35,7 +35,7 @@ class FileEmployeeRepositoryTest : StringSpec({
     }
 
     "EmployeeRepositoryException when reading an invalid CSV file" {
-        val sut: EmployeeRepository = FileEmployeeRepository("invalid_csv_input.txt")
+        val sut: EmployeeRepository = FileEmployeeRepository("invalid_input.txt")
 
         val result = sut.allEmployees()
 

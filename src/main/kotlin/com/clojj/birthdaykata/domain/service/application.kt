@@ -1,4 +1,4 @@
-package com.clojj.birthdaykata.application
+package com.clojj.birthdaykata.domain.service
 
 import arrow.core.Either
 import arrow.core.computations.either

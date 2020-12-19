@@ -9,8 +9,9 @@ fun useSomething() {
     println(result)
 }
 
+@Suppress("ClassName")
 object something {
-    val abc = "abc"
+    const val abc = "abc"
 
     inline fun eager(crossinline c: () -> Int): Int {
         println("eager")
