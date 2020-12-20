@@ -5,7 +5,6 @@ import arrow.core.computations.either
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
 import arrow.fx.coroutines.parTraverseEither
 import com.clojj.birthdaykata.domain.ValidationResult
-import com.clojj.birthdaykata.domain.validateN
 import kotlinx.coroutines.*
 import java.io.IOException
 
@@ -34,7 +33,7 @@ private suspend fun program() {
         }()
         result
 */
-        // val ioContext: CoroutineContext = newFixedThreadPoolContext(3, "io-pool")
+        // https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/debugging.md#debug-mode
         val result = validated.toList().parTraverseEither(Dispatchers.IO + CoroutineName("io-dispatchers")) {
             val list = fetch(it)
             list
@@ -48,23 +47,23 @@ private suspend fun program() {
 suspend fun fetch(id: Char): Either<Nel<String>, List<Int>> {
     println("fetching $id on thread ${Thread.currentThread().name}...")
     return when (id) {
-            'a' -> {
-                listOf(1, 10).right()
-            }
-            'b' -> {
-                delay(200)
-                // listOf(2, 20)
-                throw IOException("outage for 'b'")
-            }
-            'c' -> {
-                delay(500)
-                listOf(3, 30).right().also {
-                    println("finished c")
-                }
-            }
-
-            else -> throw IllegalArgumentException("unknown id $id")
+        'a' -> {
+            listOf(1, 10).right()
         }
+        'b' -> {
+            delay(200)
+            // listOf(2, 20).right()
+            throw IOException("outage for 'b'")
+        }
+        'c' -> {
+            delay(500)
+            listOf(3, 30).right().also {
+                println("finished c")
+            }
+        }
+
+        else -> throw IllegalArgumentException("unknown id $id")
+    }
 }
 
 suspend fun fetchCatching(id: Char): Either<Nel<String>, List<Int>> {
@@ -92,13 +91,10 @@ suspend fun fetchCatching(id: Char): Either<Nel<String>, List<Int>> {
 }
 
 private fun validateComposite(name: String?): ValidationResult<String> {
-    return validateN(validateNotNullOrBlank(name), validateLowercase(name!!), validateMin3(name)).map { name }
-}
-
-// TODO add constraint to inform the compiler ?
-private fun validateNotNullOrBlank(value: String?): ValidationResult<String> {
-    return if (!value.isNullOrBlank()) value.valid()
-    else "String must not be blank, found '$value'".invalidNel()
+    val fromNullable = ValidationResult.fromNullable(name) { "String must not be blank or null".nel() }
+    return fromNullable.fold({ it.invalid() }) { nonNullName ->
+        validateN(validateLowercase(nonNullName), validateMin3(nonNullName)).map { nonNullName }
+    }
 }
 
 private fun validateLowercase(value: String): ValidationResult<String> =
@@ -111,6 +107,11 @@ private fun validateMin3(value: String): ValidationResult<String> =
 
 
 // helpers
+
+fun <A, B> validateN(
+    vrA: ValidationResult<A>,
+    vrB: ValidationResult<B>
+) = ValidationResult.tupledN(NonEmptyList.semigroup(), vrA, vrB)
 
 fun <A, B, C> validateN(
     vrA: ValidationResult<A>,
