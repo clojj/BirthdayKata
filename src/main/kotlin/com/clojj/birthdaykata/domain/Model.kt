@@ -32,9 +32,21 @@ data class Employee(
 
         private val DATE_FORMAT = DateTimeFormatter.ofPattern("uuuu/MM/dd")
 
-        private fun validateName(value: String?): ValidationResult<String> =
-            if (!value.isNullOrBlank()) value.valid()
+        private fun validateMin3(value: String): ValidationResult<String> =
+            if (value.length >= 3) value.valid()
+            else "Name must have at least 3 characters, found ${value.length}".invalidNel()
+
+        private fun validateCase(value: String): ValidationResult<String> =
+            if (value.first().isUpperCase()) value.valid()
+            else "Name must start with uppercase, found '${value.first()}'".invalidNel()
+
+        private fun validateNotNullOrBlank(value: String?): ValidationResult<String> {
+            return if (!value.isNullOrBlank()) value.valid()
             else "Name must not be blank, found '$value'".invalidNel()
+        }
+
+        private fun validateName(name: String?): ValidationResult<String> =
+            validateN(validateNotNullOrBlank(name), validateCase(name!!), validateMin3(name)).map { name }
 
         private fun validateDateOfBirth(dob: String?): ValidationResult<LocalDate> =
             try {
@@ -50,9 +62,7 @@ data class Employee(
             dateOfBirth: String?,
             email: String?
         ): ValidationResult<Employee> =
-            ValidationResult
-                .tupledN(
-                    NonEmptyList.semigroup(),
+            validateN(
                     validateName(firstName),
                     validateName(lastName),
                     validateDateOfBirth(dateOfBirth),
@@ -60,6 +70,22 @@ data class Employee(
                 ).map { (fn, ln, dob, e) -> Employee(fn, ln, dob, e) }
     }
 }
+
+data class Name(val name: String)
+
+fun <A, B, C, D> validateN(
+    vrA: ValidationResult<A>,
+    vrB: ValidationResult<B>,
+    vrC: ValidationResult<C>,
+    vrD: ValidationResult<D>
+) = ValidationResult.tupledN(NonEmptyList.semigroup(), vrA, vrB, vrC, vrD)
+
+fun <A, B, C> validateN(
+    vrA: ValidationResult<A>,
+    vrB: ValidationResult<B>,
+    vrC: ValidationResult<C>
+) = ValidationResult.tupledN(NonEmptyList.semigroup(), vrA, vrB, vrC)
+
 
 data class EmailMessage(
     val from: EmailAddress,
