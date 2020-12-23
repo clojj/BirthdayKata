@@ -4,48 +4,10 @@ import arrow.core.*
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
 import arrow.extension
 import arrow.typeclasses.Semigroup
+import arrow.typeclasses.SemigroupK
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-
-typealias ValidationResultWithInput<A> = Validated<Pair<Endo<A>, Nel<String>>, A>
-
-val semigroup_singleton_endo: EndoSemigroup<Any?> = object : EndoSemigroup<Any?> {}
-
-@Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
-inline fun <A> semigroupEndo(): EndoSemigroup<A> = semigroup_singleton_endo as EndoSemigroup<A>
-
-@extension
-interface EndoSemigroup<A> : Semigroup<Endo<A>> {
-    override fun Endo<A>.combine(b: Endo<A>): Endo<A> = Endo { a -> b.f(this.f(a)) }
-}
-
-// TODO semigroup Pair
-
-val semigroup_singleton_pair: PairSemigroup<Any?, Any?> = object : PairSemigroup<Any?, Any?> {}
-
-@Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
-inline fun <A, B> semigroupPair(): PairSemigroup<Semigroup<A>, Semigroup<B>> = semigroup_singleton_pair as PairSemigroup<Semigroup<A>, Semigroup<B>>
-
-@extension
-interface PairSemigroup<A, B> : Semigroup<Pair<Semigroup<A>, Semigroup<B>>> {
-    override fun Pair<Semigroup<A>, Semigroup<B>>.combine(b: Pair<Semigroup<A>, Semigroup<B>>): Pair<Semigroup<A>, Semigroup<B>> = Pair(this.first + b.first, this.second + b.second)
-}
-
-
-// --- inline classes
-
-inline class EmailAddr @PublishedApi internal constructor(private val value: String) {
-    override fun toString(): String = value
-    companion object {
-        fun parse(string: String): EmailAddress {
-            check(string.contains('@')) { "Invalid email address." }
-            return EmailAddress(string)
-        }
-    }
-}
-
-// ---
 
 typealias ValidationResult<A> = ValidatedNel<String, A>
 

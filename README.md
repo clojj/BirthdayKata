@@ -1,8 +1,10 @@
 ## TODO
 
-- validate using arrow's Validated type
-- Validated with left-type: Pair<Endo<A>, Nel<String>> https://blog.ploeh.dk/2020/12/21/a-haskell-proof-of-concept-of-validation-with-partial-data-round-trip/
-  
+- upgrade to arrow 0.13 (Kind etc. deprecated!)
+ 
+- new inline classes (init and/or private ctor)
+- ValidationResultWithInput https://blog.ploeh.dk/2020/12/21/a-haskell-proof-of-concept-of-validation-with-partial-data-round-trip/
+- more validations using arrow's Validated type
 - split gradle modules
 - ArchUnit
 - more infra: database, ktor server, messaging, ...
