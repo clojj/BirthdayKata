@@ -30,6 +30,7 @@ class FileEmployeeRepository(fileName: String) : EmployeeRepository {
         validatedEmployees.fold({ Either.left(EmployeeRepositoryException(it)) }, { Either.right(it) })
     }
 
+    // TODO
     private fun sequence(input: List<ValidationResult<Employee>>): ValidationResult<List<Employee>> =
         input.sequence(ValidationResult.applicative(Nel.semigroup()))
             .fix()

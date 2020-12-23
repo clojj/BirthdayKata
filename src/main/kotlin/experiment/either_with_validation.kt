@@ -7,10 +7,15 @@ import arrow.fx.coroutines.parTraverseEither
 import com.clojj.birthdaykata.domain.ValidationResult
 import kotlinx.coroutines.*
 import java.io.IOException
+import java.util.*
 
 fun main() {
 
     val scope = CoroutineScope(SupervisorJob())
+
+    scope.launch {
+        programWithActions()
+    }
 
     scope.launch {
         program()
@@ -19,11 +24,62 @@ fun main() {
     Thread.sleep(1000)
 }
 
+// ---
+
+// https://arrow-kt.io/docs/next/apidocs/arrow-fx-stm/arrow.fx.stm/-s-t-m/index.html
+/*
+fun STM.transfer(from: TVar<Int>, to: TVar<Int>, amount: Int): Unit {
+    withdraw(from, amount)
+    deposit(to, amount)
+}
+
+fun STM.deposit(acc: TVar<Int>, amount: Int): Unit {
+    val current = acc.read()
+    acc.write(current + amount)
+    // or the shorthand acc.modify { it + amount }
+}
+
+fun STM.withdraw(acc: TVar<Int>, amount: Int): Unit {
+    val current = acc.read()
+    if (current - amount >= 0) acc.write(current + amount)
+    else throw IllegalStateException("Not enough money in the account!")
+}
+*/
+
+// ---
+
+typealias Action<A> = suspend () -> A
+
+fun createFetchAction(uuid: UUID): Action<Either<Nel<String>, String>> =
+    { "result for $uuid".right() }
+
+suspend fun programWithActions() {
+
+    val uuids = listOf(UUID.randomUUID(), UUID.randomUUID())
+
+    val acts = uuids.map { createFetchAction(it) }
+
+    val result = either<Nel<String>, String> {
+        // "list of IO actions"
+        acts[0]()()
+    }
+    println(result)
+}
+
+// ---
+
 private suspend fun program() {
+
+    val uuids = listOf(UUID.randomUUID(), UUID.randomUUID())
+
     val results = either<Nel<String>, List<Int>> {
         // TODO validate many fields
         val validated = validateComposite("abc")()
 
+        // "list of IO actions"
+        val acts = uuids.map { createFetchAction(it) }
+
+        val r = acts[0]()
 /*
         val result = either<Nel<String>, List<Int>> {
             val a = fetchCatching(validated[0])()

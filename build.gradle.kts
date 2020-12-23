@@ -1,13 +1,16 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm") version "1.4.30-M1"
+    // id("org.jetbrains.kotlin.jvm") version "1.4.30-M1"
 }
 
 group = "com.clojj"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenCentral()
     maven("https://oss.jfrog.org/artifactory/oss-snapshot-local/")
+    mavenCentral()
     jcenter()
 }
 
@@ -21,6 +24,7 @@ dependencies {
     val arrow_version = "latest.integration"
     implementation("io.arrow-kt:arrow-fx:$arrow_version")
     implementation("io.arrow-kt:arrow-fx-coroutines:$arrow_version")
+    // implementation("io.arrow-kt:arrow-fx-stm:0.12.0-SNAPSHOT")
 
     val ktor_version = "1.4.2"
     implementation("io.ktor:ktor-client-cio:$ktor_version")
@@ -45,4 +49,8 @@ tasks {
     compileTestKotlin {
         kotlinOptions.jvmTarget = "11"
     }
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    freeCompilerArgs = listOf("-Xinline-classes")
 }
